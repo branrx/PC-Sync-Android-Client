@@ -6,16 +6,16 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
+import android.provider.Settings
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
-import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -23,24 +23,28 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -48,15 +52,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.bunnyha.homeautomationsystem.ui.theme.SyncAppTheme
 import com.example.syncapp.ui.SyncViewModel
 import com.example.syncapp.ui.green
 import com.example.syncapp.ui.red
-import com.example.syncapp.ui.theme.SyncAppTheme
 import java.util.concurrent.Executors
-import android.provider.Settings
-import androidx.compose.ui.input.key.Key.Companion.Home
-import androidx.compose.ui.platform.LocalContext
 
 
 var context: Context? = null
@@ -64,6 +66,10 @@ var context: Context? = null
 var permissionTag = "Permission Tag"
 
 val ebrima = FontFamily(Font(R.font.ebrima))
+val bison = FontFamily(
+    Font(R.font.bison, weight = FontWeight.Normal),
+    Font(R.font.bison_demibold, weight = FontWeight.SemiBold),
+    Font(R.font.bison_bold, weight = FontWeight.Bold))
 
 class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
@@ -81,6 +87,7 @@ class MainActivity : ComponentActivity() {
                 startActivity(intent)
             }
         }
+        installSplashScreen()
         setContent {
             SyncAppTheme() {
                 // A surface container using the 'background' color from the theme
@@ -104,50 +111,41 @@ fun HomeLayout(syncViewModel: SyncViewModel = viewModel())
 {
     Column(
         modifier = Modifier
-            .fillMaxSize(),
+            .fillMaxSize()
+            .alpha(0.95f),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Card(
             modifier = Modifier
-                .weight(0.1f)
-                .fillMaxWidth(),
-            shape = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)
+                .weight(0.08f)
+                .fillMaxWidth()
+                .shadow(8.dp),
+            //shape = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         )
         {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.Start,
                 modifier = Modifier.fillMaxSize()
             )
             {
-                Box(
-                    modifier = Modifier.fillMaxHeight(),
-                    contentAlignment = Alignment.CenterStart
-                ) {
-                    Text(
-                        text = "SOFIA",
-                        modifier = Modifier.padding(start = 16.dp, bottom = 20.dp),
-                        fontFamily = ebrima,
-                        fontWeight = FontWeight.ExtraBold,
-                        style = TextStyle(
-                            letterSpacing = 4.sp, fontSize = 28.sp
-                        )
-                    )
-                    Text(
-                        text = "SYNC-CLIENT",
-                        modifier = Modifier.padding(start = 20.dp, top = 20.dp),
-                        fontSize = 16.sp,
-                        fontFamily = ebrima
-                    )
-                }
+                Icon(painter = painterResource(R.drawable.sync_logo_svglike),
+                    contentDescription = "app icon", modifier = Modifier.scale(0.5f))
+                Text(text= stringResource(id = R.string.app_name),fontSize = 24.sp,
+                    fontFamily = bison,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 4.sp)
             }
         }
         Spacer(modifier = Modifier.weight(0.05f))
         //  local container
         Card(modifier = Modifier
             .fillMaxWidth(0.95f)
-            .weight(0.2f))
+            .weight(0.25f)
+            .shadow(8.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface))
         {
             AttributesContainer("LOCAL", syncViewModel)
         }
@@ -156,7 +154,9 @@ fun HomeLayout(syncViewModel: SyncViewModel = viewModel())
         //  global container
         Card(modifier = Modifier
             .fillMaxWidth(0.95f)
-            .weight(0.2f))
+            .weight(0.25f)
+            .shadow(8.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface))
         {
             AttributesContainer("GLOBAL", syncViewModel)
         }
@@ -172,16 +172,25 @@ fun HomeLayout(syncViewModel: SyncViewModel = viewModel())
         Spacer(modifier = Modifier.weight(0.05f))
         Card(modifier = Modifier
             .fillMaxWidth(0.95f)
-            .weight(0.1f))
+            .weight(0.1f)
+            .shadow(8.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface))
         {
             DirectoriesLayout()
         }
         Spacer(modifier = Modifier.weight(0.05f))
         Card(modifier = Modifier
             .fillMaxWidth(0.95f)
-            .weight(0.1f))
+            .weight(0.1f)
+            .shadow(8.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface))
         {
-            LastSyncLayout(syncViewModel)
+            Column(verticalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxSize()) {
+                Spacer(modifier = Modifier.weight(0.1f))
+                LastSyncLayout(syncViewModel)
+                Spacer(modifier = Modifier.weight(0.1f))
+            }
         }
 
         Spacer(modifier = Modifier.weight(0.05f))
@@ -198,22 +207,23 @@ fun HomeLayout(syncViewModel: SyncViewModel = viewModel())
             ProgressBarLayout(syncViewModel)
         }
         Spacer(modifier = Modifier.weight(0.025f))
-        ConnectButtonLayout(syncViewModel)
+        AnimatedVisibility(!syncViewModel.isConnected){ ConnectButtonLayout(syncViewModel) }
+        AnimatedVisibility(syncViewModel.isConnected){ DisConnectButtonLayout(syncViewModel) }
         Spacer(modifier = Modifier.weight(0.025f))
-        Card(modifier = Modifier
+        /*Card(modifier = Modifier
             .weight(0.04f)
             .fillMaxSize(),
             shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
         {
             IndicatorLayout(syncViewModel)
-        }
+        }*/
     }
 }
 
 @Composable
 fun PullSyncLayout(syncViewModel: SyncViewModel)
 {
-    Button(onClick = {
+    /*Button(onClick = {
         Executors.newSingleThreadExecutor().execute {syncViewModel.getLocalFiles()}
     }, modifier = Modifier
         .scale(0.9f)
@@ -222,38 +232,72 @@ fun PullSyncLayout(syncViewModel: SyncViewModel)
         enabled = syncViewModel.isConnected
     ) {
         Text(text = "DIRS", color = Color.LightGray)
-    }
+    }*/
 
-    Button(onClick = { Executors.newSingleThreadExecutor().execute { syncViewModel.makePullRequest() } }, modifier = Modifier
+    OutlinedButton(onClick = { Executors.newSingleThreadExecutor().execute { syncViewModel.makePullRequest() } }, modifier = Modifier
         .scale(0.9f)
         .padding(top = 16.dp),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(50),
         enabled = syncViewModel.isConnected
     ) {
-        Text(text = "PULL")
+        Icon(
+            painter = painterResource(R.drawable.alt_arrow_down_svgrepo_com),
+            contentDescription = "app icon", modifier = Modifier
+                .requiredSize(40.dp)
+                .padding(end = 16.dp)
+        )
+        Text(
+            text = "PULL", fontFamily = bison, letterSpacing = 2.sp, fontSize = 20.sp,
+            color = MaterialTheme.colorScheme.onSurface, modifier = Modifier
+        )
     }
 
-    Button(onClick = {
+    OutlinedButton(onClick = {
         Executors.newSingleThreadExecutor().execute {syncViewModel.makeSyncRequest()}
     }, modifier = Modifier
         .scale(0.9f)
         .padding(top = 16.dp),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(50),
         enabled = syncViewModel.isConnected
     ) {
-        Text(text = "SYNC")
+        Icon(painter = painterResource(R.drawable.restart_svgrepo_com),
+            contentDescription = "app icon", modifier = Modifier
+                .requiredSize(40.dp)
+                .padding(end = 16.dp))
+        Text(text = "SYNC", fontFamily = bison, letterSpacing = 2.sp, fontSize = 20.sp,
+            color = MaterialTheme.colorScheme.onSurface)
     }
 }
 
 @Composable
 fun ConnectButtonLayout(syncViewModel: SyncViewModel)
 {
-    Button(onClick = { Executors.newSingleThreadExecutor().execute { syncViewModel.connectToServer()
+    OutlinedButton(onClick = { Executors.newSingleThreadExecutor().execute { syncViewModel.connectToServer()
     }}  , modifier = Modifier,
-        shape = RoundedCornerShape(12.dp),
-        enabled = !syncViewModel.isConnected
+        shape = RoundedCornerShape(50)
     ) {
-        Text(text = "CONNECT")
+        Icon(painter = painterResource(R.drawable.bolt_svgrepo_com),
+            contentDescription = "app icon", modifier = Modifier
+                .requiredSize(20.dp)
+                .padding(end = 8.dp))
+        Text(text = "CONNECT", fontFamily = bison, letterSpacing = 2.sp, fontSize = 20.sp,
+            color = MaterialTheme.colorScheme.onSurface)
+    }
+}
+
+@Composable
+fun DisConnectButtonLayout(syncViewModel: SyncViewModel)
+{
+    OutlinedButton(onClick = { Executors.newSingleThreadExecutor().execute { syncViewModel.serverDisconnect()
+    }}  , modifier = Modifier,
+        shape = RoundedCornerShape(50)
+    ) {
+        Icon(painter = painterResource(R.drawable.bolt_svgrepo_com),
+            contentDescription = "app icon", modifier = Modifier
+                .requiredSize(20.dp)
+                .padding(end = 8.dp))
+        Text(text = "DISCONNECT", fontFamily = bison, letterSpacing = 2.sp, fontSize = 20.sp,
+            color = MaterialTheme.colorScheme.onSurface)
     }
 }
 
@@ -277,15 +321,73 @@ fun IndicatorLayout(syncViewModel: SyncViewModel)
 @Composable
 fun DirectoriesLayout()
 {
-    Text(text = "Directory", modifier = Modifier.padding(start = 12.dp, top=10.dp), fontSize = 20.sp, fontFamily = ebrima)
-    Text(text = ".../SyncApp/Music/", modifier = Modifier.padding(start = 12.dp), fontSize = 16.sp, fontFamily = ebrima)
+    Row(modifier = Modifier.fillMaxHeight()) {
+        Icon(
+            painter = painterResource(R.drawable.folder_open_svgrepo_com),
+            contentDescription = "device icon", modifier = Modifier
+                .scale(0.5f)
+                .padding(top = 8.dp)
+        )
+        Column(modifier = Modifier.fillMaxHeight(),
+            verticalArrangement = Arrangement.Center)
+        {
+            Text(
+                text = "DIRECTORY",
+                modifier = Modifier
+                    .padding(start = 4.dp, top = 0.dp)
+                    .alpha(0.5f),
+                fontSize = 20.sp,
+                fontFamily = bison,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = 2.sp
+            )
+            Text(
+                text = ".../SyncApp/Music/",
+                modifier = Modifier
+                    .padding(start = 4.dp, top = 0.dp),
+                fontSize = 20.sp,
+                fontFamily = bison,
+                fontWeight = FontWeight.Normal,
+                letterSpacing = 2.sp
+            )
+        }
+    }
 }
 
 @Composable
 fun LastSyncLayout(syncViewModel: SyncViewModel)
 {
-    Text(text = "Last Sync", modifier = Modifier.padding(start = 12.dp, top=10.dp), fontSize = 20.sp, fontFamily = ebrima)
-    Text(text = syncViewModel.syncDate, modifier = Modifier.padding(start = 12.dp), fontSize = 16.sp, fontFamily = ebrima)
+    Row(modifier = Modifier.fillMaxHeight()) {
+        Icon(
+            painter = painterResource(R.drawable.clock_circle_svgrepo_com),
+            contentDescription = "device icon", modifier = Modifier
+                .scale(0.5f)
+                .padding(top = 8.dp)
+        )
+        Column(modifier = Modifier.fillMaxHeight(),
+            verticalArrangement = Arrangement.Center)
+        {
+            Text(
+                text = "LAST SYNC",
+                modifier = Modifier
+                    .padding(start = 4.dp, top = 0.dp)//t26, s4
+                    .alpha(0.5f),
+                fontSize = 20.sp,
+                fontFamily = bison,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = 2.sp
+            )
+            Text(
+                text = syncViewModel.syncDate,
+                modifier = Modifier
+                    .padding(start = 4.dp, top = 0.dp),
+                fontSize = 20.sp,
+                fontFamily = bison,
+                fontWeight = FontWeight.Normal,
+                letterSpacing = 2.sp
+            )
+        }
+    }
 }
 @Composable
 fun ProgressBarLayout(syncViewModel: SyncViewModel)
@@ -298,7 +400,8 @@ fun ProgressBarLayout(syncViewModel: SyncViewModel)
             .padding(bottom = 8.dp)
         )
     }
-    Text(text = syncViewModel.statusString, fontSize = 20.sp)
+    var statusText = if(syncViewModel.statusString.length>=35){syncViewModel.statusString.take(32)+".."}else{syncViewModel.statusString}
+    Text(text = statusText/*syncViewModel.statusString*/, fontFamily = bison, letterSpacing = 2.sp, fontSize = 20.sp)
 }
 
 @Composable
@@ -325,56 +428,140 @@ fun AttributesContainer(fieldTitle: String, syncViewModel: SyncViewModel)
         verticalArrangement = Arrangement.Center
     ) {
         Spacer(modifier = Modifier.weight(0.1f))
-        Row(horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth()
+        Row(horizontalArrangement = Arrangement.Start,
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(0.8f)
         )
         {
-            Row(verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(start = 12.dp)
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.folder_fill0_wght400_grad0_opsz48),
-                    contentDescription = "folder icon",
+            Column(horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
-                        .scale(1f)
-                        .rotate(-90f),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(text = dirsCount.toString(), fontSize = 50.sp, fontFamily = ebrima)
-            }
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-
+                    .weight(0.1f))
+            {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.weight(0.8f)
                 ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.draft_fill0_wght400_grad0_opsz48),
-                    contentDescription = "files icon",
+                    Icon(
+                        painter = painterResource(id = R.drawable.folder_svgrepo_com),
+                        contentDescription = "folder icon",
+                        modifier = Modifier
+                            .scale(0.6f)
+                            .weight(0.1f)
+                            .fillMaxSize(),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        text = dirsCount.toString(),
+                        fontSize = 40.sp,
+                        fontFamily = bison,
+                        modifier = Modifier.weight(0.1f),
+                        textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.SemiBold
+                    )
+
+                }
+                Text(
+                    text = "folders",
                     modifier = Modifier
-                        .scale(1f)
-                        .rotate(0f),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        .weight(0.2f)
+                        .alpha(0.5f),
+                    fontSize = 18.sp,
+                    fontFamily = bison,
+                    fontWeight = FontWeight.Normal,
+                    letterSpacing = 2.sp
                 )
-                Text(text = fileCount.toString(), fontSize = 50.sp, fontFamily = ebrima)
             }
 
-            Row(verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(end=12.dp)
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.hard_drive_fill0_wght400_grad0_opsz48),
-                    contentDescription = "files icon",
+            Column(horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .weight(0.1f))
+            {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
-                        .scale(1f)
-                        .rotate(-90f),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        .padding(end = 0.dp)
+                        .weight(0.8f)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.file_text_svgrepo_com),
+                        contentDescription = "files icon",
+                        modifier = Modifier
+                            .scale(0.6f)
+                            .weight(0.1f)
+                            .rotate(0f)
+                            .fillMaxSize(),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        text = fileCount.toString(),
+                        fontSize = 40.sp,
+                        fontFamily = bison,
+                        modifier = Modifier.weight(0.1f),
+                        textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+                Text(
+                    text = "files",
+                    modifier = Modifier
+                        .weight(0.2f)
+                        .alpha(0.5f),
+                    fontSize = 18.sp,
+                    fontFamily = bison,
+                    fontWeight = FontWeight.Normal,
+                    letterSpacing = 2.sp
                 )
-                Text(text = String.format("%,.2f", sizeCount), fontSize = 50.sp, fontFamily = ebrima)
+            }
+
+            Column(horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .weight(0.1f))
+            {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .padding(end = 0.dp)
+                        .weight(0.8f)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.server_2_svgrepo_com),
+                        contentDescription = "files icon",
+                        modifier = Modifier
+                            .scale(0.6f)
+                            .weight(0.1f)
+                            .rotate(-90f)
+                            .fillMaxSize(),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        text = String.format("%,.3f", sizeCount),
+                        fontSize = 40.sp,
+                        fontFamily = bison,
+                        modifier = Modifier.weight(0.1f),
+                        textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+                Text(
+                    text = "size",
+                    modifier = Modifier
+                        .weight(0.2f)
+                        .alpha(0.5f),
+                    fontSize = 18.sp,
+                    fontFamily = bison,
+                    fontWeight = FontWeight.Normal,
+                    letterSpacing = 2.sp
+                )
             }
         }
         Text(text = fieldTitle, modifier = Modifier
             .fillMaxWidth()
-            .padding(end = 12.dp), fontSize = 30.sp, textAlign = TextAlign.End)
+            .weight(0.2f)
+            .padding(end = 12.dp), fontSize = 20.sp,
+            textAlign = TextAlign.End, fontFamily = bison,
+        letterSpacing = 4.sp)
         Spacer(modifier = Modifier.weight(0.1f))
     }
 }

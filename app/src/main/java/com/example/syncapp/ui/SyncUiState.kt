@@ -15,7 +15,7 @@ data class SyncUiState(
     var localFilesCount: Int = 0,
     var globalFilesCount: Int = 0,
     var globalDirsCount: Int = 0,
-    var globalSize: Int = 0,
+    var globalSize: Long = 0,
     var localDirsCount: Int = 0,
     var localSize: Int = 0,
     var isUpToDate: Boolean = false,

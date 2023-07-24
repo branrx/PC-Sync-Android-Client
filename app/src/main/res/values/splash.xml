@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.SplashTheme" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#FF1c1b20</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/sync_logo</item>
+        <item name="windowSplashScreenIconBackgroundColor">#FF3F4946</item>
+        <item name="windowSplashScreenAnimationDuration">3000</item>
+    </style>
+</resources>

@@ -79,7 +79,7 @@ class SyncViewModel: ViewModel()
     var localSize by mutableStateOf(0)
     var globalFilesCount by mutableStateOf(0)
     var globalDirsCount by mutableStateOf(0)
-    var globalSize by mutableStateOf(0)
+    var globalSize by mutableStateOf(0L)
 
     var syncDate by mutableStateOf("---")
 
@@ -260,6 +260,22 @@ class SyncViewModel: ViewModel()
         }
     }
 
+    //  tells server to close socket/connection
+    fun serverDisconnect()
+    {
+        try {
+            //  send termination signal
+            socketWriter?.write("term".toByteArray())
+        }   catch (e: Exception)
+        {
+            Log.d("Disconnect Error!", "Server unreachable, broken socket.")
+        }
+        statusString = "offline"
+        isConnected = false
+        updateStatusString()
+        updateConnection()
+    }
+
     //  compiles the contents of the local directory at app launch
     //  and assigns the attributes into the ui
     @RequiresApi(Build.VERSION_CODES.O)
@@ -336,7 +352,7 @@ class SyncViewModel: ViewModel()
         //  get attributes from global register file and remove them
         globalFilesCount = tempGlobalSongs[(tempGlobalSongs.size)-3].split("##").last().toInt()
         globalDirsCount = tempGlobalSongs[(tempGlobalSongs.size)-2].split("##").last().toInt()
-        globalSize = tempGlobalSongs[(tempGlobalSongs.size)-1].split("##").last().toInt()
+        globalSize = tempGlobalSongs[(tempGlobalSongs.size)-1].split("##").last().toLong()
 
         Log.d("files: ", globalFilesCount.toString())
         Log.d("dirs: ", globalDirsCount.toString())
@@ -640,7 +656,7 @@ class SyncViewModel: ViewModel()
         editor?.putString("SyncDate", syncDate)
         editor?.putInt("globalFiles", globalFilesCount)
         editor?.putInt("globalDirs", globalDirsCount)
-        editor?.putInt("globalSize", globalSize)
+        editor?.putLong("globalSize", globalSize)
 
         editor?.apply()
     }
@@ -652,7 +668,12 @@ class SyncViewModel: ViewModel()
         syncDate = sharedPreferences?.getString("SyncDate", "---").toString()
         globalFilesCount = sharedPreferences?.getInt("globalFiles", 0) ?: 0
         globalDirsCount = sharedPreferences?.getInt("globalDirs", 0) ?: 0
-        globalSize = sharedPreferences?.getInt("globalSize", 0) ?: 0
+        try {
+            globalSize = sharedPreferences?.getLong("globalSize", 0) ?: 0
+        } catch (e: Exception)
+        {
+            Log.d("getLong", e.message.toString())
+        }
     }
 
     //  stops system from invoking requests if system is already pulling or syncing

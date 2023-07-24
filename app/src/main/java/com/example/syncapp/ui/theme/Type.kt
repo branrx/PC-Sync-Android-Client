@@ -1,4 +1,4 @@
-package com.example.syncapp.ui.theme
+package com.bunnyha.homeautomationsystem.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
